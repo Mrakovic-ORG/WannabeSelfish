@@ -1,0 +1,22 @@
+{
+  "name": "wannabeselfish",
+  "version": "1.1.7",
+  "author": "Tesla",
+  "license": "GNU-3.0-or-later",
+  "description": "A multi purpose discord self bot with bypass capabilities.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "discord",
+    "discord bot",
+    "self bot"
+  ],
+  "dependencies": {
+    "discord.js": "11.6.4",
+    "prompts": "^2.3.2",
+    "crypto-js": "^4.0.0",
+    "colors": "^1.4.0"
+  }
+}
