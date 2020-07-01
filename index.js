@@ -1,9 +1,10 @@
-const Discord = require('discord.js'),
+require('colors');
+const fs = require('fs'),
+	Discord = require('discord.js'),
 	bot = new Discord.Client(),
-	colors = require('colors'),
 	prompts = require('prompts'),
 	CryptoJS = require('crypto-js'),
-	fs = require('fs');
+	fetch = require('node-fetch');
 
 process.title = 'WannabeSelfish - WANNABE1337.xyz';
 console.log(`%s
@@ -45,7 +46,8 @@ bot.on('message', (message) => {
 		prefix = config.prefix,
 		msgArg = msg.slice(prefix.length).split(/ +/),
 		msgCommand = msgArg.shift().toLowerCase(),
-		msgWithoutCommandName = msg.slice((prefix + msgCommand + 1).length);
+		msgWithoutCommandName = msg.slice((prefix + msgCommand + 1).length),
+		msgWithoutCmd = msgArg[0] ? msgWithoutCommandName.slice(msgArg[0].length) : '';
 
 	/**
 	 * List command with their usage
@@ -65,7 +67,9 @@ ${prefix}[${'purge_all'.bold}, ${'prune_all'.bold}] => Delete every message you 
 ${prefix}[${'cm'.bold}, ${'count_messages'.bold}] => Count then send the number of message you wrote on a channel.
 ${prefix}[${'sp'.bold}, ${'spam'.bold}] {${'Number of Messages'.bold}} {${'Message'.bold}} => Self describing.
 ${prefix}${'lfe'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fucker by edition, Will edit a message many times in order to spam logger plugins.
-${prefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fucker by deletion, Will send then delete many message in order to spam logger plugins.`.cyan);
+${prefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fucker by deletion, Will send then delete many message in order to spam logger plugins.
+${prefix}${'backup_account'.bold} => Will backup your friends and the servers you are in.
+${prefix}${'restore_friends'.bold} => Will send a friend request to all friends who got backed up previously.`.cyan);
 	}
 
 	/**
@@ -173,7 +177,7 @@ ${prefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fuck
 		message.delete();
 
 		for (let i = 0, iN = Number(msgArg[0]); i < iN; ++i) {
-			message.channel.send(msgWithoutCommandName.slice(msgArg[0].length)).catch(() => console.log(`Could not send the %s message.`.cyan.bgRed, i.toString().bold));
+			message.channel.send(msgWithoutCmd).catch(() => console.log(`Could not send the %s message.`.cyan.bgRed, i.toString().bold));
 
 			if (i >= iN - 1) {
 				console.log('Successfully sent %s messages.'.cyan, iN.toString().bold);
@@ -189,9 +193,9 @@ ${prefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fuck
 		for (let i = 0; i < Number(msgArg[0]); ++i) {
 			let longNl = '\n'.repeat(Math.floor(Math.random() * 1500));
 			if (i % 2) {
-				message.edit(msgArg[1]);
+				message.edit(msgWithoutCmd);
 			}
-			message.edit(msgArg[1] + longNl + msgArg[1]);
+			message.edit(msgWithoutCmd + longNl + msgWithoutCmd);
 		}
 
 		// Edit back to original
@@ -206,11 +210,64 @@ ${prefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fuck
 		message.delete();
 
 		for (let i = 0; i < Number(msgArg[0]); ++i) {
-			message.channel.send(msgArg[1]).then(msg => msg.delete());
+			message.channel.send(msgWithoutCmd).then(msg => msg.delete());
 		}
 
 		// Edit back to original
-		message.edit(msgArg[1]);
+		message.edit(msgWithoutCmd);
+	}
+
+	/**
+	 * Backup friends, guilds
+	 */
+	if (msgCommand === 'backup_account') {
+		const friends = bot.user.friends.array(),
+			guilds = bot.guilds.array();
+
+		try {
+			fs.writeFileSync('backup.json', JSON.stringify({
+				friends: friends,
+				guilds: guilds,
+			}));
+			console.log(`Successfully backed up ${friends.length.toString().bold} friends and ${guilds.length.toString().bold} servers.`.cyan);
+		} catch {
+			console.log('Could not complete the backup.'.red);
+		}
+	}
+
+	/**
+	 * Restore friends from your backup
+	 */
+	if (msgCommand === 'restore_friends') {
+		if (fs.existsSync('backup.json') === false) {
+			return console.log('Could not locate your backup.'.red);
+		}
+
+		const friends = fs.readFileSync('backup.json', 'utf-8');
+		let jsonFriends = JSON.parse(friends);
+
+		console.log(`A total of ${jsonFriends.friends.length.toString().bold} friends will be restored.`.cyan);
+
+		jsonFriends.friends.forEach(friend => {
+			fetch(`https://discord.com/api/v6/users/@me/relationships/${friend.id}`, {
+				method: 'PUT',
+				headers: {
+					'Authorization': bot.token,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({}),
+			}).then((response) => {
+				let response_data = response.clone();
+
+				if (response_data.status === 204) {
+					console.log('Sent a friend request to %s'.cyan, (friend.username + friend.discriminator).bold);
+				} else {
+					console.log('Could not send a friend request to %s'.red, (friend.username + friend.discriminator).bold);
+				}
+			}).catch((error) => {
+				console.warn(error);
+			});
+		});
 	}
 
 	if (message.channel.type === 'dm') {
