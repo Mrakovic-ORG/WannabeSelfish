@@ -1,15 +1,12 @@
 # WannabeSelfish
 A multi purpose discord self bot with bypass capabilities.
 
-![license](https://img.shields.io/badge/LICENSE-GNU-green?style=flat-square)
-[![Build Status](https://img.shields.io/travis/com/Mrakovic-ORG/WannabeSelfish?style=flat-square)](https://travis-ci.com/Mrakovic-ORG/WannabeSelfish)
-
 ### Preview
-![preview](images/preview.png)
+![preview](images/preview.gif)
 
 ### Features
-- Automatic config generation
-- AES encryption for token
+- Fully automated CLI to GUI interface
+- AES Encryption for token
 - Message fetch limit bypass
 
 ### Install
