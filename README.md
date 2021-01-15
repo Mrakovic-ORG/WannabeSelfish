@@ -17,4 +17,4 @@ npm install
 npm start
 ```
 ### Disclaimer
-We are not responsible for any account banishment, its has been made for educational purpose.
+We are not responsible for any account banishment, it has been made for educational purpose.

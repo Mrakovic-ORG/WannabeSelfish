@@ -48,17 +48,14 @@ bot.on('message', (message) => {
     if (msgCommand === 'react') {
         message.delete();
 
-        const messageRef = message.reference?.messageID ?? false,
-            reaction = new Set(String(msgArg[0]).split('')),
-            CODE_POINT = 127365;
+        const messageRef = message.reference?.messageID ?? false;
 
         if (messageRef === false) return console.log('You must use this command inside a reply'.red)
-        if (reaction.size > 20) return console.log('Cannot add more than 20 reactions per message'.red)
+        if (msgWithoutCommandName.length > 20) return console.log('Cannot add more than 20 reactions per message'.red)
 
         message.channel.fetchMessage(messageRef).then(message => {
-            reaction.forEach(char => {
-                // get char code point add the distant CODE_POINT to get its Regional indicator symbol
-                message.react(String.fromCodePoint(char.toLocaleLowerCase().codePointAt(0) + CODE_POINT))
+            formatToEmoji(msgWithoutCommandName).forEach(char => {
+                message.react(char)
                     .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
                     .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
             });
@@ -72,20 +69,17 @@ bot.on('message', (message) => {
     if (msgCommand === 'bulk_react' || msgCommand === 'br') {
         message.delete();
 
-        const numberMsg = parseInt(msgArg[0], 10),
-            reaction = new Set(String(msgArg[1]).split('')),
-            CODE_POINT = 127365;
+        const numberMsg = parseInt(msgArg[0], 10);
 
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
-        if (reaction.size > 20) return console.log('Cannot add more than 20 reactions per message'.red);
+        if (msgWithoutCommandName.length > 20) return console.log('Cannot add more than 20 reactions per message'.red);
 
         massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id !== bot.user.id).slice(0, numberMsg);
 
-            msg_array.map(msg => {
-                reaction.forEach(char => {
-                    // get char code point add the distant CODE_POINT to get its Regional indicator symbol
-                    msg.react(String.fromCodePoint(char.toLocaleLowerCase().codePointAt(0) + CODE_POINT))
+            msg_array.forEach(msg => {
+                formatToEmoji(msgWithoutCommandName).forEach(char => {
+                    msg.react(char)
                         .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
                         .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
                 });
@@ -107,7 +101,7 @@ bot.on('message', (message) => {
         massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id !== bot.user.id).slice(0, numberMsg);
 
-            msg_array.map(msg => {
+            msg_array.forEach(msg => {
                 msg.reactions.forEach(reaction => {
                     reaction.me && reaction.remove()
                         .then(() => console.log(`Removing reaction "%s" to %s in %s`.cyan, `${reaction.emoji.name}`.bold, `${reaction.message.author.username}#${reaction.message.author.discriminator}`.bold, `${reaction.message.channel.name}`.bold))
@@ -323,32 +317,67 @@ bot.on('message', (message) => {
 });
 
 /**
- * Bypass the discord limit of fetching messages from a channel
- * @param channel
- * @param limit
- * @returns {Promise<[]>}
+ * Format unicode characters to its emoji equivalent
+ * @param string
+ * @returns {[]}
  */
-async function massFetchMessages(channel, limit = 1000) {
-    const sum_messages = [];
-    let last_id;
+const formatToEmoji = (string) => {
+        let SPACE_CHARS = ['🔴', '⚫', '⚪', '🔵', '🔲', '🔘', '🟪', '🟩', '🟡', '🟠', '🟨', '🟤', '⬜', '🟥', '🟫', '🟧', '🟣', '🟢', '🟦', '⬛'],
+            CODE_POINT = 127365, // distance from from unicode to Regional indicator symbol
+            NUMERAL_EMOJI = '\uFE0F\u20E3', // basically adding these to a numeral is giving its equivalent in emoji
+            FORMATTED_CHAR = [];
 
-    while (true) {
-        const options = {limit: 100};
-        if (last_id) {
-            options.before = last_id;
+        // split each chars from the given string
+        String(string).split('').forEach(char => {
+            // get char code point add the distant CODE_POINT to get its Regional indicator symbol
+            let outputChar = String.fromCodePoint(char.toLocaleLowerCase().codePointAt(0) + CODE_POINT),
+                // pick a random char from the space chars array
+                RAND_SPACE = SPACE_CHARS[Math.floor(Math.random() * SPACE_CHARS.length)];
+
+            // if the char is a number convert it to a emoji
+            if (isNaN(Number(char)) === false) outputChar = char + NUMERAL_EMOJI;
+
+            // if the char is a space
+            if (char === ' ' && SPACE_CHARS.length > 0) {
+                // remove the randomly picked char from the array
+                SPACE_CHARS.splice(SPACE_CHARS.indexOf(RAND_SPACE), 1);
+                outputChar = RAND_SPACE;
+            }
+
+            FORMATTED_CHAR.push(outputChar);
+        });
+
+        return FORMATTED_CHAR;
+    },
+
+    /**
+     * Bypass the discord limit of fetching messages from a channel
+     * @param channel
+     * @param limit
+     * @returns {Promise<[]>}
+     */
+    massFetchMessages = async (channel, limit = 1000) => {
+        const sum_messages = [];
+        let last_id;
+
+        while (true) {
+            const options = {limit: 100};
+            if (last_id) {
+                options.before = last_id;
+            }
+
+            const messages = await channel.fetchMessages(options);
+            sum_messages.push(...messages.array());
+            last_id = messages.last().id;
+
+            if (messages.size !== 100 || sum_messages.length >= limit) {
+                break;
+            }
         }
 
-        const messages = await channel.fetchMessages(options);
-        sum_messages.push(...messages.array());
-        last_id = messages.last().id;
-
-        if (messages.size !== 100 || sum_messages.length >= limit) {
-            break;
-        }
+        return sum_messages;
     }
 
-    return sum_messages;
-}
 
 const successLogin = () => console.log(`Logged in as %s`.cyan, bot.user.tag.bold),
 
@@ -414,7 +443,7 @@ ${configPrefix}${'restore_friends'.bold} => Will send a friend request to all fr
                 welcomeMessage();
                 displayCommands();
                 // Try to login if the token is already saved else ask for registration
-                return bot.login(configToken).catch(e => register(false));
+                return bot.login(configToken).catch(() => register(false));
             case 3:
                 console.log('Deleting your config...'.cyan);
                 fs.unlinkSync('./config.json');
