@@ -79,7 +79,7 @@ bot.on('message', (message) => {
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
         if (reaction.size > 20) return console.log('Cannot add more than 20 reactions per message'.red);
 
-        massFetchMessages(message.channel).then(messages => {
+        massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id !== bot.user.id).slice(0, numberMsg);
 
             msg_array.map(msg => {
@@ -104,7 +104,7 @@ bot.on('message', (message) => {
 
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
 
-        massFetchMessages(message.channel).then(messages => {
+        massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id !== bot.user.id).slice(0, numberMsg);
 
             msg_array.map(msg => {
@@ -155,7 +155,7 @@ bot.on('message', (message) => {
         let numberMsg = parseInt(msgArg[0], 10);
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
 
-        massFetchMessages(message.channel).then(messages => {
+        massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id === bot.user.id).slice(0, numberMsg),
                 totalMsg = msg_array.length,
                 delMsg = '';
@@ -342,7 +342,7 @@ async function massFetchMessages(channel, limit = 1000) {
         sum_messages.push(...messages.array());
         last_id = messages.last().id;
 
-        if (messages.size !== 100 || sum_messages >= limit) {
+        if (messages.size !== 100 || sum_messages.length >= limit) {
             break;
         }
     }
