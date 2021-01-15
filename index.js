@@ -32,7 +32,7 @@ bot.on('message', (message) => {
         msgArg = msg.slice(configPrefix.length).split(/ +/),
         msgCommand = msgArg.shift().toLowerCase(),
         msgWithoutCommandName = msg.slice((configPrefix + msgCommand + 1).length),
-        msgWithoutCmd = msgArg[0] ? msgWithoutCommandName.slice(msgArg[0].length) : '';
+        msgWithoutCmd = msgArg[0] ? msgWithoutCommandName.slice(msgArg[0].length + 1 /*+1 for space*/) : '';
 
     /**
      * List command with their usage
@@ -66,34 +66,31 @@ bot.on('message', (message) => {
      * Add alphabetical reactions to a number of message
      * <Number Of Message> <Alphabetical Reaction>
      */
-    if (msgCommand === 'bulk_react' || msgCommand === 'br') {
-        message.delete();
-
+    if (msgCommand === 'bulk_react' || msgCommand === 'br') message.delete().then(() => {
         const numberMsg = parseInt(msgArg[0], 10);
 
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
-        if (msgWithoutCommandName.length > 20) return console.log('Cannot add more than 20 reactions per message'.red);
+        if (msgWithoutCmd.length > 20) return console.log('Cannot add more than 20 reactions per message'.red);
 
         massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id !== bot.user.id).slice(0, numberMsg);
 
             msg_array.forEach(msg => {
-                formatToEmoji(msgWithoutCommandName).forEach(char => {
+                formatToEmoji(msgWithoutCmd).forEach(char => {
                     msg.react(char)
                         .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
                         .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
                 });
             });
         });
-    }
+    });
+
 
     /**
      * Remove all reactions that were set to a number of message
      * <Number Of Message>
      */
-    if (msgCommand === 'purge_reactions' || msgCommand === 'pr') {
-        message.delete();
-
+    if (msgCommand === 'purge_reactions' || msgCommand === 'pr') message.delete().then(() => {
         const numberMsg = parseInt(msgArg[0], 10);
 
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
@@ -109,14 +106,13 @@ bot.on('message', (message) => {
                 });
             });
         });
-    }
+    });
 
     /**
      * Guild Mass message send
      * <Message>
      */
-    if (msgCommand === 'guild_message') {
-        message.delete();
+    if (msgCommand === 'guild_message') message.delete().then(() => {
         let dmGuild = message.guild;
         if (!msgWithoutCommandName || msgWithoutCommandName.length <= 0) return;
 
@@ -125,27 +121,26 @@ bot.on('message', (message) => {
             console.log(`Trying to message %s`.cyan, `${member.user.username}#${member.user.discriminator}`.bold);
             member.send(msgWithoutCommandName).catch(() => console.log(`Could not message %s`.red, `${member.user.username}#${member.user.discriminator}`.bold));
         });
-    }
+    });
 
     /**
      * Send a message to all the users you had a talk/interaction with
      * <Message>
      */
-    if (msgCommand === 'message_all') {
-        message.delete();
+    if (msgCommand === 'message_all') message.delete().then(() => {
         if (!msgWithoutCommandName || msgWithoutCommandName.length <= 0) return;
 
         bot.user.client.users.forEach(member => {
             console.log(`Trying to message %s`.cyan, `${member.username}#${member.discriminator}`.bold);
             bot.users.get(member.id).send(msgWithoutCommandName).catch(() => console.log(`Could not message %s`.red, `${member.username}#${member.discriminator}`.bold));
         });
-    }
+    });
 
     /**
      * Purge messages
      * <Number Of Message>
      */
-    if (msgCommand === 'purge' || msgCommand === 'prune') {
+    if (msgCommand === 'purge' || msgCommand === 'prune') message.delete().then(() => {
         let numberMsg = parseInt(msgArg[0], 10);
         if (isNaN(numberMsg)) return console.log('Invalid Integer?'.red);
 
@@ -170,12 +165,12 @@ bot.on('message', (message) => {
                 .then(() => console.log(`Deleted %s in %s.`.cyan, m.content.bold, delMsg.bold))
                 .catch(() => console.log(`Could not delete %s in %s.`.red, m.content.bold, delMsg.bold)));
         }).catch(() => console.log(`Could not load messages.`.red));
-    }
+    });
 
     /**
      * Purge messages from all pm sent
      */
-    if (msgCommand === 'purge_all' || msgCommand === 'prune_all') {
+    if (msgCommand === 'purge_all' || msgCommand === 'prune_all') message.delete().then(() => {
         bot.user.client.users.forEach(member => {
             if (!bot.users.get(member.id).dmChannel) return;
 
@@ -194,29 +189,25 @@ bot.on('message', (message) => {
             }).catch(() => console.log(`Could not load messages from %s`.red, `${member.username}#${member.discriminator}`.bold));
         });
 
-    }
+    });
 
     /**
      * Send the number of message you wrote on the channel
      */
-    if (msgCommand === 'cm' || msgCommand === 'count_messages') {
-        message.delete();
-
+    if (msgCommand === 'cm' || msgCommand === 'count_messages') message.delete().then(() => {
         massFetchMessages(message.channel).then(messages => {
             let msg_array = messages.filter(m => m.author.id === bot.user.id),
                 totalMsg = msg_array.length;
 
             message.channel.send(`I wrote ${totalMsg} messages in this channel.`).catch(() => console.log(`Could not send the message.`.red));
         }).catch(() => console.log(`Could not load messages.`.red));
-    }
+    });
 
     /**
      * Spam messages
      * <Number Of Message> <Messages>
      */
-    if (msgCommand === 'sp' || msgCommand === 'spam') {
-        message.delete();
-
+    if (msgCommand === 'sp' || msgCommand === 'spam') message.delete().then(() => {
         for (let i = 0, iN = Number(msgArg[0]); i < iN; ++i) {
             message.channel.send(msgWithoutCmd).catch(() => console.log(`Could not send the %s message.`.cyan.bgRed, i.toString().bold));
 
@@ -224,7 +215,7 @@ bot.on('message', (message) => {
                 console.log('Successfully sent %s messages.'.cyan, iN.toString().bold);
             }
         }
-    }
+    });
 
     /**
      * Logger Fucker by Edition
@@ -247,8 +238,7 @@ bot.on('message', (message) => {
      * Logger Fucker by Deletion
      * <Number of Deletion> <Message>
      */
-    if (msgCommand === 'lfd') {
-        message.delete();
+    if (msgCommand === 'lfd') message.delete().then(() => {
 
         for (let i = 0; i < Number(msgArg[0]); ++i) {
             message.channel.send(msgWithoutCmd).then(msg => msg.delete());
@@ -256,12 +246,12 @@ bot.on('message', (message) => {
 
         // Edit back to original
         message.edit(msgWithoutCmd);
-    }
+    });
 
     /**
      * Backup friends, guilds
      */
-    if (msgCommand === 'backup_account') {
+    if (msgCommand === 'backup_account') message.delete().then(() => {
         const friends = bot.user.friends.array(),
             guilds = bot.guilds.array();
 
@@ -274,12 +264,12 @@ bot.on('message', (message) => {
         } catch {
             console.log('Could not complete the backup.'.red);
         }
-    }
+    });
 
     /**
      * Restore friends from your backup
      */
-    if (msgCommand === 'restore_friends') {
+    if (msgCommand === 'restore_friends') message.delete().then(() => {
         if (fs.existsSync('backup.json') === false) {
             return console.log('Could not locate your backup.'.red);
         }
@@ -309,7 +299,7 @@ bot.on('message', (message) => {
                 console.warn(error);
             });
         });
-    }
+    });
 
     if (message.channel.type === 'dm') {
         //DM
