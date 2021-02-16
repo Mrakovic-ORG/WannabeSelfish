@@ -1,14 +1,15 @@
 require('colors');
-const fs = require('fs'),
-    Discord = require('discord.js'),
-    bot = new Discord.Client(),
-    prompts = require('prompts'),
-    CryptoJS = require('crypto-js'),
-    fetch = require('node-fetch');
+const fs         = require('fs'),
+      Discord    = require('discord.js'),
+      bot        = new Discord.Client(),
+      prompts    = require('prompts'),
+      CryptoJS   = require('crypto-js'),
+      fetch      = require('node-fetch'),
+      configPath = process.cwd() + '/config.json';
 
-let config = '',
+let config       = '',
     configPrefix = '',
-    configToken = '';
+    configToken  = '';
 
 process.title = 'WannabeSelfish - WANNABE1337.xyz';
 
@@ -17,9 +18,9 @@ process.title = 'WannabeSelfish - WANNABE1337.xyz';
  * if available proceed to login
  * else register config file
  */
-fs.promises.access('./config.json', fs.constants.F_OK)
-    .then(() => login())
-    .catch(() => register());
+fs.promises.access(configPath, fs.constants.F_OK)
+  .then(() => login())
+  .catch(() => register());
 
 // Display exit selection if process detects exit attempt.
 process.on('SIGINT', () => exitSelect());
@@ -28,11 +29,11 @@ bot.on('message', (message) => {
     if (message.author.id !== bot.user.id) return;
     if (!message.content.startsWith(config.prefix)) return;
 
-    let msg = message.content,
-        msgArg = msg.slice(configPrefix.length).split(/ +/),
-        msgCommand = msgArg.shift().toLowerCase(),
+    let msg                   = message.content,
+        msgArg                = msg.slice(configPrefix.length).split(/ +/),
+        msgCommand            = msgArg.shift().toLowerCase(),
         msgWithoutCommandName = msg.slice((configPrefix + msgCommand + 1).length),
-        msgWithoutCmd = msgArg[0] ? msgWithoutCommandName.slice(msgArg[0].length + 1 /*+1 for space*/) : '';
+        msgWithoutCmd         = msgArg[0] ? msgWithoutCommandName.slice(msgArg[0].length + 1 /*+1 for space*/) : '';
 
     /**
      * List command with their usage
@@ -56,8 +57,8 @@ bot.on('message', (message) => {
         message.channel.fetchMessage(messageRef).then(message => {
             formatToEmoji(msgWithoutCommandName).forEach(char => {
                 message.react(char)
-                    .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
-                    .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
+                       .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
+                       .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
             });
         });
     }
@@ -78,8 +79,8 @@ bot.on('message', (message) => {
             msg_array.forEach(msg => {
                 formatToEmoji(msgWithoutCmd).forEach(char => {
                     msg.react(char)
-                        .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
-                        .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
+                       .then(r => console.log(`Reacting to %s in %s`.cyan, `${r.message.author.username}#${r.message.author.discriminator}`.bold, `${r.message.channel.name}`.bold))
+                       .catch(() => console.log(`Could not react with %s`.red, `${char}`.bold));
                 });
             });
         });
@@ -101,8 +102,8 @@ bot.on('message', (message) => {
             msg_array.forEach(msg => {
                 msg.reactions.forEach(reaction => {
                     reaction.me && reaction.remove()
-                        .then(() => console.log(`Removing reaction "%s" to %s in %s`.cyan, `${reaction.emoji.name}`.bold, `${reaction.message.author.username}#${reaction.message.author.discriminator}`.bold, `${reaction.message.channel.name}`.bold))
-                        .catch((reactions) => console.log(`Could not clear reaction %s`.red, `${reactions}`.bold));
+                                           .then(() => console.log(`Removing reaction "%s" to %s in %s`.cyan, `${reaction.emoji.name}`.bold, `${reaction.message.author.username}#${reaction.message.author.discriminator}`.bold, `${reaction.message.channel.name}`.bold))
+                                           .catch((reactions) => console.log(`Could not clear reaction %s`.red, `${reactions}`.bold));
                 });
             });
         });
@@ -146,8 +147,8 @@ bot.on('message', (message) => {
 
         massFetchMessages(message.channel, numberMsg).then(messages => {
             let msg_array = messages.filter(m => m.author.id === bot.user.id).slice(0, numberMsg),
-                totalMsg = msg_array.length,
-                delMsg = '';
+                totalMsg  = msg_array.length,
+                delMsg    = '';
 
             if (totalMsg <= 0) return console.log('No message to delete.'.red);
 
@@ -162,8 +163,8 @@ bot.on('message', (message) => {
             console.log(`Deleting %s messages in %s.`.cyan, totalMsg.toString().bold, delMsg.bold);
 
             msg_array.filter(m => !m.system).map(m => m.delete()
-                .then(() => console.log(`Deleted %s in %s.`.cyan, m.content.bold, delMsg.bold))
-                .catch(() => console.log(`Could not delete %s in %s.`.red, m.content.bold, delMsg.bold)));
+                                                       .then(() => console.log(`Deleted %s in %s.`.cyan, m.content.bold, delMsg.bold))
+                                                       .catch(() => console.log(`Could not delete %s in %s.`.red, m.content.bold, delMsg.bold)));
         }).catch(() => console.log(`Could not load messages.`.red));
     });
 
@@ -176,16 +177,16 @@ bot.on('message', (message) => {
 
             massFetchMessages(bot.users.get(member.id).dmChannel).then(messages => {
                 let msg_array = messages.filter(m => m.author.id === bot.user.id),
-                    totalMsg = msg_array.length,
-                    delMsg = `${member.username}#${member.discriminator}`;
+                    totalMsg  = msg_array.length,
+                    delMsg    = `${member.username}#${member.discriminator}`;
 
                 if (totalMsg <= 0) return;
 
                 console.log(`Deleting %s messages from %s`.cyan, totalMsg.toString().bold, `${member.username}#${member.discriminator}`.bold);
 
                 msg_array.filter(m => !m.system).map(m => m.delete()
-                    .then(() => console.log(`Deleted %s in %s.`.cyan, m.content.bold, delMsg.bold))
-                    .catch(() => console.log(`Could not delete %s in %s.`.red, m.content.bold, delMsg.bold)));
+                                                           .then(() => console.log(`Deleted %s in %s.`.cyan, m.content.bold, delMsg.bold))
+                                                           .catch(() => console.log(`Could not delete %s in %s.`.red, m.content.bold, delMsg.bold)));
             }).catch(() => console.log(`Could not load messages from %s`.red, `${member.username}#${member.discriminator}`.bold));
         });
 
@@ -197,7 +198,7 @@ bot.on('message', (message) => {
     if (msgCommand === 'cm' || msgCommand === 'count_messages') message.delete().then(() => {
         massFetchMessages(message.channel).then(messages => {
             let msg_array = messages.filter(m => m.author.id === bot.user.id),
-                totalMsg = msg_array.length;
+                totalMsg  = msg_array.length;
 
             message.channel.send(`I wrote ${totalMsg} messages in this channel.`).catch(() => console.log(`Could not send the message.`.red));
         }).catch(() => console.log(`Could not load messages.`.red));
@@ -253,7 +254,7 @@ bot.on('message', (message) => {
      */
     if (msgCommand === 'backup_account') message.delete().then(() => {
         const friends = bot.user.friends.array(),
-            guilds = bot.guilds.array();
+              guilds  = bot.guilds.array();
 
         try {
             fs.writeFileSync('backup.json', JSON.stringify({
@@ -311,76 +312,76 @@ bot.on('message', (message) => {
  * @param string
  * @returns {[]}
  */
-const formatToEmoji = (string) => {
-        let SPACE_CHARS = ['🔴', '⚫', '⚪', '🔵', '🔲', '🔘', '🟪', '🟩', '🟡', '🟠', '🟨', '🟤', '⬜', '🟥', '🟫', '🟧', '🟣', '🟢', '🟦', '⬛'],
-            CODE_POINT = 127365, // distance from from unicode to Regional indicator symbol
-            NUMERAL_EMOJI = '\uFE0F\u20E3', // basically adding these to a numeral is giving its equivalent in emoji
-            FORMATTED_CHAR = [];
+const formatToEmoji     = (string) => {
+    let SPACE_CHARS    = ['🔴', '⚫', '⚪', '🔵', '🔲', '🔘', '🟪', '🟩', '🟡', '🟠', '🟨', '🟤', '⬜', '🟥', '🟫', '🟧', '🟣', '🟢', '🟦', '⬛'],
+        CODE_POINT     = 127365, // distance from from unicode to Regional indicator symbol
+        NUMERAL_EMOJI  = '\uFE0F\u20E3', // basically adding these to a numeral is giving its equivalent in emoji
+        FORMATTED_CHAR = [];
 
-        // split each chars from the given string
-        String(string).split('').forEach(char => {
-            // get char code point add the distant CODE_POINT to get its Regional indicator symbol
-            let outputChar = String.fromCodePoint(char.toLocaleLowerCase().codePointAt(0) + CODE_POINT),
-                // pick a random char from the space chars array
-                RAND_SPACE = SPACE_CHARS[Math.floor(Math.random() * SPACE_CHARS.length)];
+    // split each chars from the given string
+    String(string).split('').forEach(char => {
+        // get char code point add the distant CODE_POINT to get its Regional indicator symbol
+        let outputChar = String.fromCodePoint(char.toLocaleLowerCase().codePointAt(0) + CODE_POINT),
+            // pick a random char from the space chars array
+            RAND_SPACE = SPACE_CHARS[Math.floor(Math.random() * SPACE_CHARS.length)];
 
-            // if the char is a number convert it to a emoji
-            if (isNaN(Number(char)) === false) outputChar = char + NUMERAL_EMOJI;
+        // if the char is a number convert it to a emoji
+        if (isNaN(Number(char)) === false) outputChar = char + NUMERAL_EMOJI;
 
-            // if the char is a space
-            if (char === ' ' && SPACE_CHARS.length > 0) {
-                // remove the randomly picked char from the array
-                SPACE_CHARS.splice(SPACE_CHARS.indexOf(RAND_SPACE), 1);
-                outputChar = RAND_SPACE;
-            }
-
-            FORMATTED_CHAR.push(outputChar);
-        });
-
-        return FORMATTED_CHAR;
-    },
-
-    /**
-     * Bypass the discord limit of fetching messages from a channel
-     * @param channel
-     * @param limit
-     * @returns {Promise<[]>}
-     */
-    massFetchMessages = async (channel, limit = 1000) => {
-        const sum_messages = [];
-        let last_id;
-
-        while (true) {
-            const options = {limit: 100};
-            if (last_id) {
-                options.before = last_id;
-            }
-
-            const messages = await channel.fetchMessages(options);
-            sum_messages.push(...messages.array());
-            last_id = messages.last().id;
-
-            if (messages.size !== 100 || sum_messages.length >= limit) {
-                break;
-            }
+        // if the char is a space
+        if (char === ' ' && SPACE_CHARS.length > 0) {
+            // remove the randomly picked char from the array
+            SPACE_CHARS.splice(SPACE_CHARS.indexOf(RAND_SPACE), 1);
+            outputChar = RAND_SPACE;
         }
 
-        return sum_messages;
-    }
+        FORMATTED_CHAR.push(outputChar);
+    });
+
+    return FORMATTED_CHAR;
+},
+
+      /**
+       * Bypass the discord limit of fetching messages from a channel
+       * @param channel
+       * @param limit
+       * @returns {Promise<[]>}
+       */
+      massFetchMessages = async (channel, limit = 1000) => {
+          const sum_messages = [];
+          let last_id;
+
+          while (true) {
+              const options = { limit: 100 };
+              if (last_id) {
+                  options.before = last_id;
+              }
+
+              const messages = await channel.fetchMessages(options);
+              sum_messages.push(...messages.array());
+              last_id = messages.last().id;
+
+              if (messages.size !== 100 || sum_messages.length >= limit) {
+                  break;
+              }
+          }
+
+          return sum_messages;
+      }
 
 
-const successLogin = () => console.log(`Logged in as %s`.cyan, bot.user.tag.bold),
+const successLogin    = () => console.log(`Logged in as %s`.cyan, bot.user.tag.bold),
 
-    welcomeMessage = () => {
-        console.clear();
-        console.log(`%s
+      welcomeMessage  = () => {
+          console.clear();
+          console.log(`%s
 %s`, ` ________                           __           _______         __   ___ __         __    
 |  |  |  |.---.-.-----.-----.---.-.|  |--.-----.|     __|.-----.|  |.'  _|__|.-----.|  |--.
 |  |  |  ||  _  |     |     |  _  ||  _  |  -__||__     ||  -__||  ||   _|  ||__ --||     |
 |________||___._|__|__|__|__|___._||_____|_____||_______||_____||__||__| |__||_____||__|__|`.rainbow, 'by WANNABE1337.xyz\r\n'.red);
-    },
+      },
 
-    displayCommands = () => console.log(`
+      displayCommands = () => console.log(`
 Welcome to the command help center.
 
 Command Prefix => ${configPrefix.bold}
@@ -399,115 +400,115 @@ ${configPrefix}${'lfe'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logge
 ${configPrefix}${'lfd'.bold} {${'Repetition'.bold}} {${'Message'.bold}} => Logger Fucker by deletion, Will send then delete many message in order to spam logger plugins.
 ${configPrefix}${'backup_account'.bold} => Will backup your friends and the servers you are in.
 ${configPrefix}${'restore_friends'.bold} => Will send a friend request to all friends who got backed up previously.\r\n`.cyan
-    ),
+      ),
 
-    exitSelect = () => prompts({
-        type: 'select',
-        name: 'choice',
-        message: 'Before you exit select your action',
-        choices: [
-            {
-                title: 'Exit',
-                description: 'Exit the current process',
-                value: 1
-            },
-            {
-                title: 'Display Commands',
-                description: 'Display the list of the commands that you can use',
-                value: 2
-            },
-            {
-                title: 'Delete Config',
-                description: 'Deleting the config.json file will result in loss of your token and command prefix',
-                value: 3
-            },
-        ],
-        initial: 0
-    }).then(response => {
-        switch (response.choice) {
-            case 1:
-                welcomeMessage();
-                console.log('Goodbye, hope you had a nice time using %s.'.cyan, 'WannabeSelfish'.rainbow.bold);
-                return process.exit();
-            case 2:
-                welcomeMessage();
-                displayCommands();
-                // Try to login if the token is already saved else ask for registration
-                return bot.login(configToken).catch(() => register(false));
-            case 3:
-                console.log('Deleting your config...'.cyan);
-                fs.unlinkSync('./config.json');
-                return register(false);
-        }
-    }),
+      exitSelect      = () => prompts({
+          type: 'select',
+          name: 'choice',
+          message: 'Before you exit select your action',
+          choices: [
+              {
+                  title: 'Exit',
+                  description: 'Exit the current process',
+                  value: 1
+              },
+              {
+                  title: 'Display Commands',
+                  description: 'Display the list of the commands that you can use',
+                  value: 2
+              },
+              {
+                  title: 'Delete Config',
+                  description: 'Deleting the config.json file will result in loss of your token and command prefix',
+                  value: 3
+              },
+          ],
+          initial: 0
+      }).then(response => {
+          switch (response.choice) {
+              case 1:
+                  welcomeMessage();
+                  console.log('Goodbye, hope you had a nice time using %s.'.cyan, 'WannabeSelfish'.rainbow.bold);
+                  return process.exit();
+              case 2:
+                  welcomeMessage();
+                  displayCommands();
+                  // Try to login if the token is already saved else ask for registration
+                  return bot.login(configToken).catch(() => register(false));
+              case 3:
+                  console.log('Deleting your config...'.cyan);
+                  fs.unlinkSync(configPath);
+                  return register(false);
+          }
+      }),
 
-    login = (showWelcome = true) => {
-        showWelcome === true && welcomeMessage();
-        config = require('./config.json');
-        configPrefix = config.prefix;
+      login           = (showWelcome = true) => {
+          showWelcome === true && welcomeMessage();
+          config = require(configPath);
+          configPrefix = config.prefix;
 
-        prompts({
-            type: 'password',
-            name: 'pass',
-            message: 'Encryption Password:',
-            validate: async pass => { // Async is required to ask discord login to await
-                let showError = false;
+          prompts({
+              type: 'password',
+              name: 'pass',
+              message: 'Encryption Password:',
+              validate: async pass => { // Async is required to ask discord login to await
+                  let showError = false;
 
-                const decryptedToken = CryptoJS.AES.decrypt(config.token, pass).toString(CryptoJS.enc.Utf8);
-                await bot.login(decryptedToken).catch(e => showError = e.message);
+                  const decryptedToken = CryptoJS.AES.decrypt(config.token, pass).toString(CryptoJS.enc.Utf8);
+                  await bot.login(decryptedToken).catch(e => showError = e.message);
 
-                // if is a string it should return the error message to the prompt
-                if (showError !== false) return showError;
+                  // if is a string it should return the error message to the prompt
+                  if (showError !== false) return showError;
 
-                // if valid set bot token and return true (should return valid on the prompt)
-                configToken = decryptedToken;
-                return true;
-            }
-        }).then(response => {
-            if (Object.entries(response).length === 0) return exitSelect();
-            successLogin();
-        });
-    },
+                  // if valid set bot token and return true (should return valid on the prompt)
+                  configToken = decryptedToken;
+                  return true;
+              }
+          }).then(response => {
+              if (Object.entries(response).length === 0) return exitSelect();
+              successLogin();
+          });
+      },
 
-    register = (showWelcome = true) => {
-        if (fs.existsSync('./config.json')) return login(false);
-        showWelcome === true && welcomeMessage();
-        console.log('Registering config file...'.cyan);
+      register        = (showWelcome = true) => {
+          if (fs.existsSync(configPath)) return login(false);
+          showWelcome === true && welcomeMessage();
+          console.log('Registering config file...'.cyan);
 
-        prompts([
-            {
-                type: 'text',
-                name: 'prefix',
-                message: 'Command Prefix:',
-            },
-            {
-                type: 'password',
-                name: 'pass',
-                message: 'Encryption Password:',
-            },
-            {
-                type: 'password',
-                name: 'token',
-                message: 'Discord Token:',
-            },
-        ]).then(response => {
-            if (Object.entries(response).length === 0) return;
+          prompts([
+              {
+                  type: 'text',
+                  name: 'prefix',
+                  message: 'Command Prefix:',
+              },
+              {
+                  type: 'password',
+                  name: 'pass',
+                  message: 'Encryption Password:',
+              },
+              {
+                  type: 'password',
+                  name: 'token',
+                  message: 'Discord Token:',
+              },
+          ]).then(response => {
+              if (Object.entries(response).length === 0) return;
 
-            const encryptedToken = CryptoJS.AES.encrypt(response.token, response.pass).toString();
-            fs.writeFileSync('./config.json', JSON.stringify({prefix: response.prefix, token: encryptedToken}));
-            console.log(`Successfully registered your config, Logging in...`.green);
+              const encryptedToken = CryptoJS.AES.encrypt(response.token, response.pass).toString();
+              fs.writeFileSync(configPath, JSON.stringify({ prefix: response.prefix, token: encryptedToken }));
+              console.log(`Successfully registered your config, Logging in...`.green);
 
-            // Attempt to login with the provided token
-            bot.login(response.token).then(() => {
-                config = require('./config.json');
-                configPrefix = response.prefix;
-                configToken = response.token;
-                successLogin();
-            }).catch(e => {
-                console.log(e.message.red, 'Because the login was not successful we are re-trying to register...\n'.cyan);
+              // Attempt to login with the provided token
+              bot.login(response.token).then(() => {
+                  config = require(configPath);
+                  configPrefix = response.prefix;
+                  configToken = response.token;
+                  successLogin();
+              }).catch(e => {
+                  console.log(e.message.red, 'Because the login was not successful we are re-trying to register...\n'.cyan);
 
-                fs.unlinkSync('./config.json');
-                register(false);
-            });
-        });
-    };
+                  fs.unlinkSync(configPath);
+                  register(false);
+              });
+          });
+      };
