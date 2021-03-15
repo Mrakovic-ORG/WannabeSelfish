@@ -21,8 +21,8 @@
     "colors": "^1.4.0",
     "crypto-js": "^4.0.0",
     "discord.js": "11.6.4",
+    "flatted": "^3.1.1",
     "node-fetch": "^2.6.1",
-    "package.json": "^2.0.1",
     "prompts": "^2.4.0",
     "readline-sync": "^1.4.10",
     "request": "^2.88.2"

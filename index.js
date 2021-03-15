@@ -1,11 +1,12 @@
 require('colors');
-const fs         = require('fs'),
-      Discord    = require('discord.js'),
-      bot        = new Discord.Client(),
-      prompts    = require('prompts'),
-      CryptoJS   = require('crypto-js'),
-      fetch      = require('node-fetch'),
-      configPath = process.cwd() + '/config.json';
+const fs                   = require('fs'),
+      Discord              = require('discord.js'),
+      bot                  = new Discord.Client(),
+      prompts              = require('prompts'),
+      CryptoJS             = require('crypto-js'),
+      fetch                = require('node-fetch'),
+      { parse, stringify } = require('flatted'),
+      configPath           = process.cwd() + '/config.json';
 
 let config       = '',
     configPrefix = '',
@@ -257,13 +258,13 @@ bot.on('message', (message) => {
               guilds  = bot.guilds.array();
 
         try {
-            fs.writeFileSync('backup.json', JSON.stringify({
+            fs.writeFileSync('backup.json', stringify({
                 friends: friends,
                 guilds: guilds,
             }));
             console.log(`Successfully backed up ${friends.length.toString().bold} friends and ${guilds.length.toString().bold} servers.`.cyan);
-        } catch {
-            console.log('Could not complete the backup.'.red);
+        } catch (err) {
+            console.log('Could not complete the backup.'.red, err);
         }
     });
 
@@ -276,7 +277,7 @@ bot.on('message', (message) => {
         }
 
         const friends = fs.readFileSync('backup.json', 'utf-8');
-        let jsonFriends = JSON.parse(friends);
+        let jsonFriends = parse(friends);
 
         console.log(`A total of ${jsonFriends.friends.length.toString().bold} friends will be restored.`.cyan);
 
@@ -287,7 +288,7 @@ bot.on('message', (message) => {
                     'Authorization': configToken,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({}),
+                body: stringify({}),
             }).then((response) => {
                 let response_data = response.clone();
 
@@ -375,7 +376,7 @@ const successLogin    = () => console.log(`Logged in as %s`.cyan, bot.user.tag.b
       welcomeMessage  = () => {
           console.clear();
           console.log(`%s
-%s`, ` ________                           __           _______         __   ___ __         __    
+%s`, ` ________                           __           _______         __   ___ __         __
 |  |  |  |.---.-.-----.-----.---.-.|  |--.-----.|     __|.-----.|  |.'  _|__|.-----.|  |--.
 |  |  |  ||  _  |     |     |  _  ||  _  |  -__||__     ||  -__||  ||   _|  ||__ --||     |
 |________||___._|__|__|__|__|___._||_____|_____||_______||_____||__||__| |__||_____||__|__|`.rainbow, 'by WANNABE1337.xyz\r\n'.red);
