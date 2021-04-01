@@ -14,7 +14,8 @@ A multi purpose discord self bot with bypass capabilities.
 git clone https://github.com/Mrakovic-ORG/WannabeSelfish
 cd WannabeSelfish
 npm install
-npm start
+git apply fix.patch
+node index.js
 ```
 ### Disclaimer
 We are not responsible for any account banishment, it has been made for educational purpose.
